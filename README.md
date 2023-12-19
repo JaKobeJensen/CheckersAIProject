@@ -1,1 +1,1 @@
-Chekcers AI Project
+ConnectFour AI Project
