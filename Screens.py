@@ -3,12 +3,12 @@ from GameObjects import *
 
 class Screen:
     def __init__(self, screenSize:tuple[int,int]=(0,0), backgroundColor:tuple[int,int,int]=None)->None:
-        self.screen:Surface = display.set_mode(screenSize)
-        self.gameObjects:dict[str:Object] = {}
+        self.screen:Surface = Surface(screenSize)
+        self.gameObjects:dict[str,Object] = {}
         self.backgroundColor:tuple[int,int,int] = backgroundColor
         draw.rect(self.screen, self.backgroundColor, Rect(0, 0, self.screen.get_width(), self.screen.get_height()))
         return
-    
+
     def get_width(self)->int:
         return self.screen.get_width()
     
@@ -16,7 +16,7 @@ class Screen:
         return self.screen.get_height()
     
     def change_screen_size(self, newScreenSize:tuple[int,int])->None:
-        self.screen:Surface = display.set_mode(newScreenSize)
+        self.screen = Surface(newScreenSize)
         return
     
     def change_background_color(self, newBackgroundColor:tuple[int,int])->None:
@@ -30,7 +30,7 @@ class Screen:
 
     def render_game_objects(self)->None:
         for gameObjectName, gameObject in self.gameObjects.items():
-            self.screen.blit()
+            gameObject.render(self.screen)
         return
 
 class MainMenuScreen(Screen):

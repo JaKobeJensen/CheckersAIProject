@@ -1,10 +1,11 @@
-from pygame import Surface, image, mouse
+from pygame import Surface, image, mouse, draw
 from pygame.font import Font 
 import math
+from abc import ABC, abstractmethod
 
-class Object:
-    def __init__(self, name:str="", xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0),
-                 visible:bool=True)->None:
+class Object(ABC):
+    def __init__(self, name:str, xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0),
+                 visible:bool=True, border:bool=False, borderColor:tuple[int,int,int]=(0,0,0), borderWidth:int=1)->None:
         self.objectName = name
         self.x:int = xPosition
         self.y:int = yPosition
@@ -12,9 +13,17 @@ class Object:
         self.velocity:float = velocity
         self.movingToNewPosition:bool = False
         self.visible:bool = visible
+        self.border:bool = border
+        self.borderColor:tuple[int,int,int] = borderColor
+        self.borderWidth:int = borderWidth
         self._exactX:float = float(xPosition)
         self._exactY:float = float(yPosition)
         self._newPosition:tuple[int,int] = (0,0)
+        self.boundingBox:BoundingBoxObject = BoundingBoxObject(name+"_boundingBox", xPosition, yPosition, velocity, vector, False)
+        return
+
+    def _update_bounding_box_size(self, newWidth:int, newHeight:int)->None:
+        self.boundingBox.change_size(newWidth, newHeight)
         return
 
     def change_position(self, newXPosition:int, newYPosition:int)->None:
@@ -22,23 +31,46 @@ class Object:
         self.y = newYPosition
         self._exactX = float(newXPosition)
         self._exactY = float(newYPosition)
+        self.boundingBox.change_position(newXPosition, newYPosition)
         return
 
     def change_velocity(self, newVelocity:float)->None:
         self.velocity = newVelocity
+        self.boundingBox.change_velocity(newVelocity)
         return
     
     def change_vector(self, newVector:tuple[float,float])->None:
         self.vector = newVector
+        self.boundingBox.change_vector(newVector)
+        return
+
+    def activate_border(self)->None:
+        self.border = True
+        return
+
+    def deactivate_border(self)->None:
+        self.border = False
+        return
+
+    def change_border_color(self, newBorderColor:tuple[int,int,int])->None:
+        self.borderColor = newBorderColor
+        return
+    
+    def change_border_width(self, newBorderWidth:int)->None:
+        self.borderWidth = newBorderWidth
         return
 
     def head_to_new_position(self, newPosition:tuple[int,int], velocity:float=1.0)->None:
         diffVector = (self.x - newPosition[0], self.y - newPosition[1])
         magnitude =  math.sqrt((diffVector[0]*diffVector[0]) + (diffVector[1]*diffVector[1]))
         normalizeVector = ((diffVector[0] / magnitude), (diffVector[1] / magnitude))
-        self.change_vector((normalizeVector[0] * velocity, normalizeVector[1] * velocity))
+        newVector = (normalizeVector[0] * velocity, normalizeVector[1] * velocity)
+        self.change_vector(newVector)
+        self.boundingBox.change_vector(newVector)
         self._newPosition = newPosition
+        self.boundingBox._newPosition = newPosition
         self.movingToNewPosition = True
+        self.boundingBox.movingToNewPosition = True
         return
 
     def move(self)->None:
@@ -47,21 +79,32 @@ class Object:
         self.x = round(self._exactX)
         self.y = round(self._exactY)
         if self.movingToNewPosition and self._newPosition[0] == self.x and self._newPosition[1] == self.y:
-            self.velocity = 0.0
-            self.vector = (0.0, 0.0)
+            self.change_velocity(0.0)
+            self.boundingBox.change_velocity(0.0)
+            self.change_vector((0.0, 0.0))
+            self.boundingBox.change_vector((0.0, 0.0))
             self.movingToNewPosition = False
-        return          
+            self.boundingBox.movingToNewPosition = False
+            self.movingToNewPosition = None
+            self.boundingBox.movingToNewPosition = None
+        return
+    
+    @abstractmethod
+    def render(self, screen:Surface)->None:
+        return        
 
 class PictureBoxObject(Object):
-    def __init__(self, img:Surface=None, imgPath:str=None, name:str="", xPosition:int=0, yPosition:int=0,
-                 velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0), visible:bool=True)->None:
-        super().__init__(name, xPosition, yPosition, velocity, vector, visible)
+    def __init__(self, name:str, xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0),
+                  visible:bool=True, border:bool=False, borderColor:tuple[int,int,int]=(0,0,0), borderWidth:int=1,
+                 img:Surface=None, imgPath:str=None)->None:
+        super().__init__(name, xPosition, yPosition, velocity, vector, visible, border, borderColor, borderWidth)
         if imgPath != None:
             self.image:Surface = image.load(imgPath)
         else:
             self.image:Surface = img
         self.width:int = self.image.get_width()
         self.height:int = self.image.get_height()
+        self.boundingBox._update_bounding_box_size(self.width, self.height)
         return
 
     def change_image(self, newImg:Surface=None, newImgPath:str=None)->None:
@@ -71,32 +114,40 @@ class PictureBoxObject(Object):
             self.image = newImg
         self.width = self.image.get_width()
         self.height = self.image.get_height()
+        self.boundingBox._update_bounding_box_size(self.width, self.height)
         return
     
-    def mouse_hover(self)->bool:
-        mousePosition = mouse.get_pos()
-        if mousePosition[0] > self.x and mousePosition[0] < self.x + self.width and \
-           mousePosition[1] > self.y and mousePosition[1] < self.y + self.height:
-            return True
-        return False
+    def render(self, screen:Surface)->None:
+        if not self.visible:
+            return
+        screen.blit(self.image, (self.x, self.y))
+        if self.border:
+            draw.lines(screen, self.borderColor, True, 
+                       [(self.x, self.y), (self.x + self.width, self.y), (self.x + self.width, self.y + self.height), (self.x, self.y + self.height)],
+                       self.borderWidth)
+        return
 
 class TextObject(Object):
-    def __init__(self, text:str="", font:Font=None, fontColor:tuple[int,int,int]=(255,255,255), backgroundColor:tuple[int,int,int]=None,
-                 name:str="", xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0),
-                 visible:bool=True)->None:
-        super().__init__(name, xPosition, yPosition, velocity, vector, visible)
+    def __init__(self, name:str, xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0),
+                 visible:bool=True, border:bool=False, borderColor:tuple[int,int,int]=(0,0,0), borderWidth:int=1,
+                 text:str="", font:Font=None, fontColor:tuple[int,int,int]=(255,255,255), backgroundColor:tuple[int,int,int]=None)->None:
+        super().__init__(name, xPosition, yPosition, velocity, vector, visible, border, borderColor, borderWidth)
         self.text:str = text
         self.font:Font = font
         self.fontColor:tuple[int,int,int] = fontColor
         self.textSurface:Surface = font.render(self.text, 1, self.fontColor)
-        self.backgroundColor = backgroundColor
-        self.width = self.textSurface.get_width()
-        self.height = self.textSurface.get_height()
+        self.backgroundColor:tuple[int,int,int] = backgroundColor
+        self.width:int = self.textSurface.get_width()
+        self.height:int = self.textSurface.get_height()
+        self.boundingBox._update_bounding_box_size(self.width, self.height)
         return
 
     def change_text(self, newText:str)->None:
         self.text = newText
         self.textSurface = self.font.render(self.text, 1, self.fontColor)
+        self.width = self.textSurface.get_width()
+        self.height = self.textSurface.get_height()
+        self.boundingBox._update_bounding_box_size(self.width, self.height)
         return
     
     def change_font(self, newFont:Font)->None:
@@ -113,9 +164,50 @@ class TextObject(Object):
         self.backgroundColor = newBackgroundColor
         return
     
+    def render(self, screen:Surface)->None:
+        if not self.visible:
+            return
+        screen.blit(self.textSurface, (self.x, self.y))
+        if self.border:
+            draw.lines(screen, self.borderColor, True, 
+                       [(self.x, self.y), (self.x + self.width, self.y), (self.x + self.width, self.y + self.height), (self.x, self.y + self.height)],
+                       self.borderWidth)
+        return
+    
+class BoundingBoxObject(Object):
+    def __init__(self, name:str, xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0), 
+                 visible:bool=True, border:bool=False, borderColor:tuple[int,int,int]=(0,0,0), borderWidth:int=1,
+                 width:int=0, height:int=0)->None:
+        super().__init__(name, xPosition, yPosition, velocity, vector, visible, border, borderColor, borderWidth)
+        self.width = width
+        self.height = height
+        return
+
     def mouse_hover(self)->bool:
         mousePosition = mouse.get_pos()
         if mousePosition[0] > self.x and mousePosition[0] < self.x + self.width and \
            mousePosition[1] > self.y and mousePosition[1] < self.y + self.height:
             return True
         return False
+    
+    def change_size(self, newWidth:int, newHeight:int)->None:
+        self.width = newWidth
+        self.height = newHeight
+        return
+    
+    def change_width(self, newWidth:int)->None:
+        self.width = newWidth
+        return
+    
+    def change_height(self, newHeight:int)->None:
+        self.height = newHeight
+        return
+    
+    def render(self, screen:Surface)->None:
+        if not self.visible:
+            return
+        if self.border:
+            draw.lines(screen, self.borderColor, True, 
+                       [(self.x, self.y), (self.x + self.width, self.y), (self.x + self.width, self.y + self.height), (self.x, self.y + self.height)],
+                       self.borderWidth)
+        return
