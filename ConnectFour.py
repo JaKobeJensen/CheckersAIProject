@@ -5,12 +5,13 @@ class ConnectFour:
     PLAYER1_SPACE = 1
     PLAYER2_SPACE = -1
 
-    def __init__(self, player1Name:str="", player2Name:str=""):
+    def __init__(self, player1Name:str="", player2Name:str="")->None:
         self._gameBoard:list[list[int]] = [[self.EMPTY_SPACE for _ in range(self.GAMEBOARD_WIDTH)] for _ in range(self.GAMEBOARD_HEIGHT)]
         self._player1Turn:bool = True
         self._winner:str = None
         self.player1Name:str = player1Name
         self.player2Name:str = player2Name
+        return
 
     def _check_win(self)->None:
         for rowIdx, row in enumerate(self._gameBoard):
@@ -72,6 +73,7 @@ class ConnectFour:
         self._gameBoard = [[self.EMPTY_SPACE for _ in range(self.GAMEBOARD_WIDTH)] for _ in range(self.GAMEBOARD_HEIGHT)]
         self._player1Turn = True
         self._winner = None
+        return
 
     def player_move(self, column:int)->bool:
         if self._winner != None:
