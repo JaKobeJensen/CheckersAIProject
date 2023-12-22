@@ -1,14 +1,17 @@
-from pygame import Surface, image, mouse, draw
+from pygame import Surface, image, mouse, draw, Rect
 from pygame.font import Font 
 import math
 from abc import ABC, abstractmethod
 
 class Object(ABC):
-    def __init__(self, name:str, xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0),
-                 visible:bool=True, border:bool=False, borderColor:tuple[int,int,int]=(0,0,0), borderWidth:int=1)->None:
+    def __init__(self, name:str, xPosition:int=0, yPosition:int=0, width:int=0, height:int=0, velocity:float=0.0,
+                 vector:tuple[float,float]=(0.0,0.0), visible:bool=True, border:bool=False,
+                 borderColor:tuple[int,int,int]=(0,0,0), borderWidth:int=1)->None:
         self.name = name
         self.x:int = xPosition
         self.y:int = yPosition
+        self.width:int = width
+        self.height:int = height
         self.vector:tuple[float,float] = vector
         self.velocity:float = velocity
         self.movingToNewPosition:bool = False
@@ -16,6 +19,7 @@ class Object(ABC):
         self.border:bool = border
         self.borderColor:tuple[int,int,int] = borderColor
         self.borderWidth:int = borderWidth
+        self.boundingBox = Rect(self.x, self.y, self.width, self.height)
         self._exactX:float = float(xPosition)
         self._exactY:float = float(yPosition)
         self._newPosition:tuple[int,int] = (0,0)
@@ -26,6 +30,7 @@ class Object(ABC):
         self.y = newYPosition
         self._exactX = float(newXPosition)
         self._exactY = float(newYPosition)
+        self.boundingBox.move(self.x, self.y)
         return
 
     def change_velocity(self, newVelocity:float)->None:
@@ -67,13 +72,17 @@ class Object(ABC):
         self._exactY += self.vector[1]
         self.x = round(self._exactX)
         self.y = round(self._exactY)
+        self.boundingBox.move(self.x, self.y)
         if self.movingToNewPosition and self._newPosition[0] == self.x and self._newPosition[1] == self.y:
             self.change_velocity(0.0)
             self.change_vector((0.0, 0.0))
             self.movingToNewPosition = False
-            self.movingToNewPosition = None
+            self._newPosition = None
         return
     
+    def mouse_hover(self)->bool:
+        return self.boundingBox.collidepoint(mouse.get_pos())
+
     @abstractmethod
     def render(self, screen:Surface)->None:
         return        
@@ -82,13 +91,12 @@ class PictureBoxObject(Object):
     def __init__(self, name:str, xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0),
                   visible:bool=True, border:bool=False, borderColor:tuple[int,int,int]=(0,0,0), borderWidth:int=1,
                  img:Surface=None, imgPath:str=None)->None:
-        super().__init__(name, xPosition, yPosition, velocity, vector, visible, border, borderColor, borderWidth)
         if imgPath != None:
             self.image:Surface = image.load(imgPath)
         else:
             self.image:Surface = img
-        self.width:int = self.image.get_width()
-        self.height:int = self.image.get_height()
+        super().__init__(name, xPosition, yPosition, self.image.get_width(), self.image.get_height(),
+                         velocity, vector, visible, border, borderColor, borderWidth)
         return
 
     def change_image(self, newImg:Surface=None, newImgPath:str=None)->None:
@@ -153,40 +161,3 @@ class TextObject(Object):
         screen.blit(self.textSurface, (self.x, self.y))
         return
     
-class BoundingBoxObject(Object):
-    def __init__(self, name:str, xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0), 
-                 visible:bool=True, border:bool=False, borderColor:tuple[int,int,int]=(0,0,0), borderWidth:int=1,
-                 width:int=0, height:int=0)->None:
-        super().__init__(name, xPosition, yPosition, velocity, vector, visible, border, borderColor, borderWidth)
-        self.width = width
-        self.height = height
-        return
-
-    def mouse_hover(self)->bool:
-        mousePosition = mouse.get_pos()
-        if mousePosition[0] > self.x and mousePosition[0] < self.x + self.width and \
-           mousePosition[1] > self.y and mousePosition[1] < self.y + self.height:
-            return True
-        return False
-    
-    def change_size(self, newWidth:int, newHeight:int)->None:
-        self.width = newWidth
-        self.height = newHeight
-        return
-    
-    def change_width(self, newWidth:int)->None:
-        self.width = newWidth
-        return
-    
-    def change_height(self, newHeight:int)->None:
-        self.height = newHeight
-        return
-    
-    def render(self, screen:Surface)->None:
-        if not self.visible:
-            return
-        if self.border:
-            draw.lines(screen, self.borderColor, True, 
-                       [(self.x, self.y), (self.x + self.width, self.y), (self.x + self.width, self.y + self.height), (self.x, self.y + self.height)],
-                       self.borderWidth)
-        return

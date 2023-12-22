@@ -60,7 +60,7 @@ class ConnectFour:
         return False
 
     def get_gameboard(self)->list[list[int]]:
-        return self._gameBoard
+        return self._gameBoard.copy()
     
     def get_winner(self)->str:
         return self._winner
