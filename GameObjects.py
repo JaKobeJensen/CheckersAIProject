@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 class Object(ABC):
     def __init__(self, name:str, xPosition:int=0, yPosition:int=0, velocity:float=0.0, vector:tuple[float,float]=(0.0,0.0),
                  visible:bool=True, border:bool=False, borderColor:tuple[int,int,int]=(0,0,0), borderWidth:int=1)->None:
-        self.objectName = name
+        self.name = name
         self.x:int = xPosition
         self.y:int = yPosition
         self.vector:tuple[float,float] = vector
@@ -19,11 +19,6 @@ class Object(ABC):
         self._exactX:float = float(xPosition)
         self._exactY:float = float(yPosition)
         self._newPosition:tuple[int,int] = (0,0)
-        self.boundingBox:BoundingBoxObject = BoundingBoxObject(name+"_boundingBox", xPosition, yPosition, velocity, vector, False)
-        return
-
-    def _update_bounding_box_size(self, newWidth:int, newHeight:int)->None:
-        self.boundingBox.change_size(newWidth, newHeight)
         return
 
     def change_position(self, newXPosition:int, newYPosition:int)->None:
@@ -31,17 +26,14 @@ class Object(ABC):
         self.y = newYPosition
         self._exactX = float(newXPosition)
         self._exactY = float(newYPosition)
-        self.boundingBox.change_position(newXPosition, newYPosition)
         return
 
     def change_velocity(self, newVelocity:float)->None:
         self.velocity = newVelocity
-        self.boundingBox.change_velocity(newVelocity)
         return
     
     def change_vector(self, newVector:tuple[float,float])->None:
         self.vector = newVector
-        self.boundingBox.change_vector(newVector)
         return
 
     def activate_border(self)->None:
@@ -66,11 +58,8 @@ class Object(ABC):
         normalizeVector = ((diffVector[0] / magnitude), (diffVector[1] / magnitude))
         newVector = (normalizeVector[0] * velocity, normalizeVector[1] * velocity)
         self.change_vector(newVector)
-        self.boundingBox.change_vector(newVector)
         self._newPosition = newPosition
-        self.boundingBox._newPosition = newPosition
         self.movingToNewPosition = True
-        self.boundingBox.movingToNewPosition = True
         return
 
     def move(self)->None:
@@ -80,13 +69,9 @@ class Object(ABC):
         self.y = round(self._exactY)
         if self.movingToNewPosition and self._newPosition[0] == self.x and self._newPosition[1] == self.y:
             self.change_velocity(0.0)
-            self.boundingBox.change_velocity(0.0)
             self.change_vector((0.0, 0.0))
-            self.boundingBox.change_vector((0.0, 0.0))
             self.movingToNewPosition = False
-            self.boundingBox.movingToNewPosition = False
             self.movingToNewPosition = None
-            self.boundingBox.movingToNewPosition = None
         return
     
     @abstractmethod
@@ -104,7 +89,6 @@ class PictureBoxObject(Object):
             self.image:Surface = img
         self.width:int = self.image.get_width()
         self.height:int = self.image.get_height()
-        self.boundingBox._update_bounding_box_size(self.width, self.height)
         return
 
     def change_image(self, newImg:Surface=None, newImgPath:str=None)->None:
@@ -114,17 +98,15 @@ class PictureBoxObject(Object):
             self.image = newImg
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-        self.boundingBox._update_bounding_box_size(self.width, self.height)
         return
     
     def render(self, screen:Surface)->None:
         if not self.visible:
             return
-        screen.blit(self.image, (self.x, self.y))
         if self.border:
-            draw.lines(screen, self.borderColor, True, 
-                       [(self.x, self.y), (self.x + self.width, self.y), (self.x + self.width, self.y + self.height), (self.x, self.y + self.height)],
-                       self.borderWidth)
+            borderRect = self.image.get_rect()
+            draw.rect(self.image, self.borderColor, borderRect,  self.borderWidth)
+        screen.blit(self.image, (self.x, self.y))
         return
 
 class TextObject(Object):
@@ -139,7 +121,6 @@ class TextObject(Object):
         self.backgroundColor:tuple[int,int,int] = backgroundColor
         self.width:int = self.textSurface.get_width()
         self.height:int = self.textSurface.get_height()
-        self.boundingBox._update_bounding_box_size(self.width, self.height)
         return
 
     def change_text(self, newText:str)->None:
@@ -147,7 +128,6 @@ class TextObject(Object):
         self.textSurface = self.font.render(self.text, 1, self.fontColor)
         self.width = self.textSurface.get_width()
         self.height = self.textSurface.get_height()
-        self.boundingBox._update_bounding_box_size(self.width, self.height)
         return
     
     def change_font(self, newFont:Font)->None:
@@ -167,11 +147,10 @@ class TextObject(Object):
     def render(self, screen:Surface)->None:
         if not self.visible:
             return
-        screen.blit(self.textSurface, (self.x, self.y))
         if self.border:
-            draw.lines(screen, self.borderColor, True, 
-                       [(self.x, self.y), (self.x + self.width, self.y), (self.x + self.width, self.y + self.height), (self.x, self.y + self.height)],
-                       self.borderWidth)
+            borderRect = self.textSurface.get_rect()
+            draw.rect(self.textSurface, self.borderColor, borderRect,  self.borderWidth)
+        screen.blit(self.textSurface, (self.x, self.y))
         return
     
 class BoundingBoxObject(Object):
