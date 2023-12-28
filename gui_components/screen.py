@@ -16,13 +16,11 @@ class Screen:
         self._height: int = round(height * screen_scaling_factor)
         self.screen: Surface = Surface((self._width, self._height))
         self._scaling_factor = screen_scaling_factor
-        self.gameObjects: LayeredUpdates = LayeredUpdates()
+        self.game_objects: LayeredUpdates = LayeredUpdates()
         self.x: int = x_position
         self.y: int = y_position
         self._background_color: tuple[int, int, int] = background_color
-        if self.background_color:
-            self.screen.fill(self.background_color)
-        return
+        self.clear()
 
     @property
     def width(self) -> int:
@@ -63,7 +61,12 @@ class Screen:
 
     def clear(self) -> None:
         if self._background_color is None:
-            self.screen.fill((0, 0, 0))
+            self.screen.fill((255, 255, 255))
         else:
             self.screen.fill(self._background_color)
         return
+
+    def update(self) -> None:
+        self.clear()
+        self.game_objects.update()
+        self.game_objects.draw(self.screen)
