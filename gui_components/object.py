@@ -1,3 +1,4 @@
+import pygame
 from pygame import Rect, Surface, draw, font, mouse
 from pygame.font import Font, SysFont
 from pygame.math import Vector2
@@ -121,6 +122,71 @@ class Object(Sprite):
         return
 
 
+class PictureBoxObject(Sprite):
+    def __init__(
+        self,
+        name: str,
+        image: Surface = None,
+        image_path: str = None,
+        position: tuple[int, int] = (0, 0),
+        direction_angle: float = 0.0,
+        velocity: float = 0.0,
+        terminal_velocity: float = 10.0,
+        acceleration: float = 0.0,
+        visible: bool = True,
+    ) -> None:
+        if image_path is not None:
+            image = pygame.image.load(image_path)
+        Object.__init__(
+            self,
+            name,
+            image,
+            position,
+            direction_angle,
+            velocity,
+            terminal_velocity,
+            acceleration,
+            visible,
+        )
+
+
+class BoundingBoxObject(Object):
+    def __init__(
+        self,
+        name: str,
+        width: int,
+        height: int,
+        position: tuple[int, int] = (0, 0),
+        border: bool = False,
+    ) -> None:
+        self._border: bool = border
+        image = Surface((width, height))
+        image.fill("red")
+        image.set_alpha(0)
+        if self._border:
+            image.set_alpha(128)
+            draw.rect(image, (0, 0, 0), image.get_rect(), 5)
+        Object.__init__(
+            self,
+            name,
+            image,
+            position,
+        )
+
+    @property
+    def border(self) -> bool:
+        return self._border
+
+    @border.setter
+    def border(self, border: bool) -> None:
+        self._border = border
+        if self._border:
+            draw.rect(self.image, (0, 0, 0), self.image.get_rect(), 5)
+        else:
+            self.image = Surface((self.width, self.height))
+        return
+
+
 class ButtonObject(Object):
     font.init()
 
@@ -136,10 +202,6 @@ class ButtonObject(Object):
         border_color: tuple[int, int, int] = (0, 0, 0),
         border_width: int = 1,
         background_color: tuple[int, int, int] = (200, 200, 200),
-        direction: float = 0.0,
-        velocity: float = 0.0,
-        terminal_velocity: float = 10.0,
-        acceleration: float = 0.0,
         visible: bool = True,
     ) -> None:
         self._text: str = text
@@ -168,10 +230,6 @@ class ButtonObject(Object):
             name,
             image,
             position,
-            direction,
-            velocity,
-            terminal_velocity,
-            acceleration,
             visible,
         )
         return
@@ -265,10 +323,6 @@ class TextObject(Object):
         text_font: Font = SysFont("Aptos", 16),
         text_color: tuple[int, int, int] = (0, 0, 0),
         position: tuple[int, int] = (0, 0),
-        direction: float = 0.0,
-        velocity: float = 0.0,
-        terminal_velocity: float = 10.0,
-        acceleration: float = 0.0,
         visible: bool = True,
     ) -> None:
         self._text: str = text
@@ -280,10 +334,6 @@ class TextObject(Object):
             name,
             image,
             position,
-            direction,
-            velocity,
-            terminal_velocity,
-            acceleration,
             visible,
         )
         return

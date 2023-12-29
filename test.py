@@ -1,8 +1,8 @@
 from codes import Codes
-from connect_four_guis import MainMenuGui
+from connect_four_guis import ConnectFourGui, MainMenuGui
 
 
-def main():
+def main_menu():
     main_menu_gui = MainMenuGui()
     code = main_menu_gui.start()
     if code is Codes.QUIT:
@@ -16,6 +16,16 @@ def main():
     elif code is Codes.TRAIN_COMPUTER:
         print("Train Computer Button was pressed")
     return
+
+
+def connect_four():
+    connect_four_gui = ConnectFourGui()
+    connect_four_gui.start()
+
+
+def main():
+    # main_menu()
+    connect_four()
 
 
 if __name__ == "__main__":
