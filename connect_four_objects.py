@@ -10,6 +10,7 @@ class YellowPiece(PictureBoxObject):
         self,
         name: str,
         position: tuple[int, int] = (0, 0),
+        scaling_factor: float = 1.0,
         visible: bool = True,
     ) -> None:
         image = pygame.image.load(self.IAMGE_PATH)
@@ -18,6 +19,7 @@ class YellowPiece(PictureBoxObject):
             name=name,
             image=image,
             position=position,
+            scaling_factor=scaling_factor,
             visible=visible,
         )
         return
@@ -30,6 +32,7 @@ class RedPiece(PictureBoxObject):
         self,
         name: str,
         position: tuple[int, int] = (0, 0),
+        scaling_factor: float = 1.0,
         visible: bool = True,
     ) -> None:
         image = pygame.image.load(self.IAMGE_PATH)
@@ -38,6 +41,7 @@ class RedPiece(PictureBoxObject):
             image=image,
             name=name,
             position=position,
+            scaling_factor=scaling_factor,
             visible=visible,
         )
         return
@@ -50,6 +54,7 @@ class GameBoard(PictureBoxObject):
         self,
         name: str,
         position: tuple[int, int] = (0, 0),
+        scaling_factor: float = 1.0,
         visible: bool = True,
     ) -> None:
         image = pygame.image.load(self.IAMGE_PATH)
@@ -58,6 +63,7 @@ class GameBoard(PictureBoxObject):
             name=name,
             image=image,
             position=position,
+            scaling_factor=scaling_factor,
             visible=visible,
         )
         return

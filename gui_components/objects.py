@@ -1,5 +1,5 @@
 import pygame
-from pygame import Rect, Surface, draw, font, mouse
+from pygame import Rect, Surface, draw, font, mouse, transform
 from pygame.font import Font, SysFont
 from pygame.math import Vector2
 from pygame.sprite import Sprite
@@ -11,6 +11,7 @@ class Object(Sprite):
         name: str,
         image: Surface,
         position: tuple[int, int] = (0, 0),
+        scaling_factor: float = 1.0,
         direction_angle: float = 0.0,
         velocity: float = 0.0,
         terminal_velocity: float = 10.0,
@@ -19,15 +20,20 @@ class Object(Sprite):
     ) -> None:
         Sprite.__init__(self)
         self._name = name
-        self._image: Surface = image
+        self._image: Surface = transform.scale_by(image, scaling_factor)
         self._position: Vector2 = Vector2(position)
         self._rect: Rect = Rect((self.x, self.y), (self.width, self.height))
+        self._scaling_factor: float = scaling_factor
         self._direction_vector: Vector2 = Vector2((1, 0)).normalize()
         self._direction_vector.rotate_ip(direction_angle)
         self._velocity: float = velocity
         self.terminal_velocity: float = terminal_velocity
         self.acceleration: float = acceleration
         self._visible: bool = visible
+        if self._visible:
+            self._image.set_alpha(255)
+        else:
+            self._image.set_alpha(0)
         return
 
     @property
@@ -40,7 +46,7 @@ class Object(Sprite):
 
     @image.setter
     def image(self, new_image: Surface) -> None:
-        self._image = new_image.copy()
+        self._image = transform.scale_by(new_image, self._scaling_factor)
         self._rect = Rect((self.x, self.y), (self.width, self.height))
         return
 
@@ -84,6 +90,17 @@ class Object(Sprite):
     @y.setter
     def y(self, new_y: int | float) -> None:
         self.position = (self.x, new_y)
+        return
+
+    @property
+    def scaling_factor(self) -> float:
+        return self._scaling_factor
+
+    @scaling_factor.setter
+    def scaling_factor(self, new_scaling_factor: float) -> None:
+        self._scaling_factor = new_scaling_factor
+        self._image = transform.scale_by(self._image, self._scaling_factor)
+        self._rect = Rect((self.x, self.y), (self.width, self.height))
         return
 
     @property
@@ -141,6 +158,7 @@ class PictureBoxObject(Object):
         image: Surface = None,
         image_path: str = None,
         position: tuple[int, int] = (0, 0),
+        scaling_factor: float = 1.0,
         direction_angle: float = 0.0,
         velocity: float = 0.0,
         terminal_velocity: float = 10.0,
@@ -149,12 +167,12 @@ class PictureBoxObject(Object):
     ) -> None:
         if image_path is not None:
             image = pygame.image.load(image_path)
-        self.test = 0
         Object.__init__(
             self,
             name,
             image,
             position,
+            scaling_factor,
             direction_angle,
             velocity,
             terminal_velocity,
@@ -170,20 +188,23 @@ class BoundingBoxObject(Object):
         width: int,
         height: int,
         position: tuple[int, int] = (0, 0),
+        scaling_factor: float = 1.0,
         visible: bool = False,
     ) -> None:
         image = Surface((width, height))
         image.fill("red")
         draw.rect(image, (0, 0, 0), image.get_rect(), 5)
-        image.set_alpha(0)
-        if visible:
-            image.set_alpha(128)
         Object.__init__(
             self,
             name,
             image,
             position,
+            scaling_factor,
+            visible=visible,
         )
+        image.set_alpha(0)
+        if visible:
+            image.set_alpha(128)
         self._visible = visible
 
     @property
@@ -253,6 +274,7 @@ class ButtonObject(Object):
         text_font: Font = SysFont("Aptos", 16),
         text_color: tuple[int, int, int] = (0, 0, 0),
         position: tuple[int, int] = (0, 0),
+        scaling_factor: float = 1.0,
         border_color: tuple[int, int, int] = (0, 0, 0),
         border_width: int = 1,
         background_color: tuple[int, int, int] = (200, 200, 200),
@@ -284,6 +306,7 @@ class ButtonObject(Object):
             name,
             image,
             position,
+            scaling_factor,
             visible,
         )
         return
@@ -377,6 +400,7 @@ class TextObject(Object):
         text_font: Font = SysFont("Aptos", 16),
         text_color: tuple[int, int, int] = (0, 0, 0),
         position: tuple[int, int] = (0, 0),
+        scaling_factor: float = 1.0,
         visible: bool = True,
     ) -> None:
         self._text: str = text
@@ -388,6 +412,7 @@ class TextObject(Object):
             name,
             image,
             position,
+            scaling_factor,
             visible,
         )
         return

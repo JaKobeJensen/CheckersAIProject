@@ -14,6 +14,8 @@ class ConnectFour:
         self._winner: str = None
         self.player1_name: str = player1_name
         self.player2_name: str = player2_name
+        self._number_of_moves: int = 0
+        self._last_piece_played_position: tuple[int, int] = ()
         return
 
     @property
@@ -23,6 +25,10 @@ class ConnectFour:
     @property
     def winner(self) -> str | None:
         return self._winner
+
+    @property
+    def number_of_moves(self) -> int:
+        return self._number_of_moves
 
     @property
     def whos_turn(self) -> str:
@@ -95,8 +101,11 @@ class ConnectFour:
         self._winner = None
         return
 
+    def last_piece_played_position(self) -> tuple[int, int]:
+        return self._last_piece_played_position
+
     def player_move(self, column: int) -> bool:
-        if self._winner is None:
+        if self._winner is not None:
             return False
         column -= 1
         for row in reversed(range(len(self._game_board))):
@@ -104,10 +113,11 @@ class ConnectFour:
                 continue
             if self._player1_turn:
                 self._game_board[row][column] = self.PLAYER1_SPACE
-                self._player1Turn = False
+                self._player1_turn = False
             else:
                 self._game_board[row][column] = self.PLAYER2_SPACE
                 self._player1_turn = True
+            self._last_piece_played_position = (row, column)
             self._check_win()
             return True
         return False

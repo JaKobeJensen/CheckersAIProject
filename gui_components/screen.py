@@ -16,7 +16,7 @@ class Screen:
         self._height: int = round(height * screen_scaling_factor)
         self.screen: Surface = Surface((self._width, self._height))
         self._scaling_factor = screen_scaling_factor
-        self.game_objects: LayeredUpdates = LayeredUpdates()
+        self.groups: dict[str, LayeredUpdates] = {}
         self.x: int = x_position
         self.y: int = y_position
         self._background_color: tuple[int, int, int] = background_color
@@ -50,6 +50,10 @@ class Screen:
         self.screen.fill(self._background_color)
         return
 
+    def add_new_group(self, group_name: str) -> None:
+        self.groups[group_name] = LayeredUpdates()
+        return
+
     def get_size(self) -> tuple[int, int]:
         return (self._width, self._height)
 
@@ -68,5 +72,6 @@ class Screen:
 
     def update(self) -> None:
         self.clear()
-        self.game_objects.update()
-        self.game_objects.draw(self.screen)
+        for group_name, group in self.groups.items():
+            group.update()
+            group.draw(self.screen)
