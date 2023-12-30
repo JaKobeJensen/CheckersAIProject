@@ -1,2 +1,2 @@
-from .object import BoundingBoxObject, ButtonObject, TextObject
+from .objects import BoundingBoxObject, ButtonObject, PictureBoxObject, TextObject
 from .screen import Screen

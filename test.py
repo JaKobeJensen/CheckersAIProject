@@ -3,7 +3,7 @@ from connect_four_guis import ConnectFourGui, MainMenuGui
 
 
 def main_menu():
-    main_menu_gui = MainMenuGui()
+    main_menu_gui = MainMenuGui(scaling_factor=1.0)
     code = main_menu_gui.start()
     if code is Codes.QUIT:
         quit()
@@ -19,7 +19,9 @@ def main_menu():
 
 
 def connect_four():
-    connect_four_gui = ConnectFourGui()
+    connect_four_gui = ConnectFourGui(
+        player1_name="Player 1", player2_name="Player 2", scaling_factor=1.0
+    )
     connect_four_gui.start()
 
 

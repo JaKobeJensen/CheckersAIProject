@@ -10,15 +10,15 @@ from gui_components import ButtonObject, Screen, TextObject
 
 
 class MainMenuGui:
-    TITLE_TEXT_SIZE = 72
-    BUTTON_SIZE = (300, 40)
-    BUTTON_TEXT_SIZE = 24
+    TITLE_TEXT_SIZE = 108
+    BUTTON_SIZE = (400, 50)
+    BUTTON_TEXT_SIZE = 32
 
     def __init__(self, scaling_factor: float = 1.0) -> None:
         self.display: Surface = display.set_mode(
             (
                 round(DEFAULT_DISPLAY_SIZE[0] * scaling_factor),
-                round(DEFAULT_DISPLAY_SIZE[0] * scaling_factor),
+                round(DEFAULT_DISPLAY_SIZE[1] * scaling_factor),
             )
         )
         self.screen: Screen = Screen(
@@ -36,12 +36,11 @@ class MainMenuGui:
             text_font=SysFont(
                 DEFAULT_FONT_TYPE,
                 round(self.TITLE_TEXT_SIZE * scaling_factor),
-                True,
             ),
         )
         title_text.position = (
-            int(self.screen.width / 2 - title_text.width / 2),
-            int(self.screen.height * 0.05),
+            round(self.screen.width / 2 - title_text.width / 2),
+            round(self.screen.height * 0.05),
         )
         self.game_object_id[title_text.name] = len(self.screen.game_objects)
         self.screen.game_objects.add(title_text)
@@ -49,8 +48,8 @@ class MainMenuGui:
         """PLAYER VS PLAYER BUTTON"""
         player_vs_player_button = ButtonObject(
             name="pvpBtn",
-            width=self.BUTTON_SIZE[0],
-            height=self.BUTTON_SIZE[1],
+            width=round(self.BUTTON_SIZE[0] * scaling_factor),
+            height=round(self.BUTTON_SIZE[1] * scaling_factor),
             text="Player VS Player",
             text_font=SysFont(
                 DEFAULT_FONT_TYPE,
@@ -58,8 +57,8 @@ class MainMenuGui:
             ),
         )
         player_vs_player_button.position = (
-            int(self.screen.width / 2 - player_vs_player_button.width / 2),
-            int(self.screen.height * 0.25),
+            round(self.screen.width / 2 - player_vs_player_button.width / 2),
+            round(self.screen.height * 0.25),
         )
         self.game_object_id[player_vs_player_button.name] = len(
             self.screen.game_objects
@@ -69,8 +68,8 @@ class MainMenuGui:
         """PLAYER VS COMPUTER BUTTON"""
         player_vs_computer_button = ButtonObject(
             name="pvcBtn",
-            width=self.BUTTON_SIZE[0],
-            height=self.BUTTON_SIZE[1],
+            width=round(self.BUTTON_SIZE[0] * scaling_factor),
+            height=round(self.BUTTON_SIZE[1] * scaling_factor),
             text="Player VS Computer",
             text_font=SysFont(
                 DEFAULT_FONT_TYPE,
@@ -78,8 +77,8 @@ class MainMenuGui:
             ),
         )
         player_vs_computer_button.position = (
-            int(self.screen.width / 2 - player_vs_computer_button.width / 2),
-            int(self.screen.height * 0.40),
+            round(self.screen.width / 2 - player_vs_player_button.width / 2),
+            round(self.screen.height * 0.40),
         )
         self.game_object_id[player_vs_computer_button.name] = len(
             self.screen.game_objects
@@ -89,8 +88,8 @@ class MainMenuGui:
         """COMPUTER VS COMPUTER BUTTON"""
         computer_vs_computer_button = ButtonObject(
             name="cvcBtn",
-            width=self.BUTTON_SIZE[0],
-            height=self.BUTTON_SIZE[1],
+            width=round(self.BUTTON_SIZE[0] * scaling_factor),
+            height=round(self.BUTTON_SIZE[1] * scaling_factor),
             text="Computer VS Computer",
             text_font=SysFont(
                 DEFAULT_FONT_TYPE,
@@ -98,8 +97,8 @@ class MainMenuGui:
             ),
         )
         computer_vs_computer_button.position = (
-            int(self.screen.width / 2 - computer_vs_computer_button.width / 2),
-            int(self.screen.height * 0.55),
+            round(self.screen.width / 2 - player_vs_player_button.width / 2),
+            round(self.screen.height * 0.55),
         )
         self.game_object_id[computer_vs_computer_button.name] = len(
             self.screen.game_objects
@@ -109,8 +108,8 @@ class MainMenuGui:
         """TRAIN COMPUTER BUTTON"""
         train_computer_button = ButtonObject(
             name="trainBtn",
-            width=self.BUTTON_SIZE[0],
-            height=self.BUTTON_SIZE[1],
+            width=round(self.BUTTON_SIZE[0] * scaling_factor),
+            height=round(self.BUTTON_SIZE[1] * scaling_factor),
             text="Train Computer",
             text_font=SysFont(
                 DEFAULT_FONT_TYPE,
@@ -118,8 +117,8 @@ class MainMenuGui:
             ),
         )
         train_computer_button.position = (
-            int(self.screen.width / 2 - train_computer_button.width / 2),
-            int(self.screen.height * 0.70),
+            round(self.screen.width / 2 - player_vs_player_button.width / 2),
+            round(self.screen.height * 0.70),
         )
         self.game_object_id[train_computer_button.name] = len(self.screen.game_objects)
         self.screen.game_objects.add(train_computer_button)

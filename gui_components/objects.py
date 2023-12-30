@@ -27,7 +27,7 @@ class Object(Sprite):
         self._velocity: float = velocity
         self.terminal_velocity: float = terminal_velocity
         self.acceleration: float = acceleration
-        self.visible: bool = visible
+        self._visible: bool = visible
         return
 
     @property
@@ -36,11 +36,11 @@ class Object(Sprite):
 
     @property
     def image(self) -> Surface:
-        return self._image
+        return self._image.copy()
 
     @image.setter
     def image(self, new_image: Surface) -> None:
-        self._image = new_image
+        self._image = new_image.copy()
         self._rect = Rect((self.x, self.y), (self.width, self.height))
         return
 
@@ -111,6 +111,18 @@ class Object(Sprite):
             self._velocity = self.terminal_velocity
         return
 
+    @property
+    def visible(self) -> bool:
+        return self._visible
+
+    @visible.setter
+    def visible(self, visible: bool) -> None:
+        self._visible = visible
+        if self._visible:
+            self._image.set_alpha(255)
+        else:
+            self._image.set_alpha(0)
+
     def move(self) -> None:
         self.velocity += self.acceleration
         self.velocity_vector = self._direction_vector * self._velocity
@@ -122,7 +134,7 @@ class Object(Sprite):
         return
 
 
-class PictureBoxObject(Sprite):
+class PictureBoxObject(Object):
     def __init__(
         self,
         name: str,
@@ -137,6 +149,7 @@ class PictureBoxObject(Sprite):
     ) -> None:
         if image_path is not None:
             image = pygame.image.load(image_path)
+        self.test = 0
         Object.__init__(
             self,
             name,
@@ -157,34 +170,75 @@ class BoundingBoxObject(Object):
         width: int,
         height: int,
         position: tuple[int, int] = (0, 0),
-        border: bool = False,
+        visible: bool = False,
     ) -> None:
-        self._border: bool = border
         image = Surface((width, height))
         image.fill("red")
+        draw.rect(image, (0, 0, 0), image.get_rect(), 5)
         image.set_alpha(0)
-        if self._border:
+        if visible:
             image.set_alpha(128)
-            draw.rect(image, (0, 0, 0), image.get_rect(), 5)
         Object.__init__(
             self,
             name,
             image,
             position,
         )
+        self._visible = visible
 
     @property
-    def border(self) -> bool:
-        return self._border
+    def image(self) -> Surface:
+        return self._image.copy()
 
-    @border.setter
-    def border(self, border: bool) -> None:
-        self._border = border
-        if self._border:
-            draw.rect(self.image, (0, 0, 0), self.image.get_rect(), 5)
-        else:
-            self.image = Surface((self.width, self.height))
+    @image.setter
+    def image(self, new_image: Surface) -> None:
         return
+
+    @property
+    def width(self) -> int:
+        return self._image.get_width()
+
+    @width.setter
+    def width(self, new_width: int) -> None:
+        self._image = Surface(new_width, self.height)
+        self._image.fill("red")
+        draw.rect(self._image, (0, 0, 0), self._image.get_rect(), 5)
+        if self._visible:
+            self._image.set_alpha(128)
+        else:
+            self._image.set_alpha(0)
+        return
+
+    @property
+    def height(self) -> int:
+        return self._image.get_height()
+
+    @height.setter
+    def height(self, new_height: int) -> None:
+        self._image = Surface(self.width, new_height)
+        self._image.fill("red")
+        draw.rect(self._image, (0, 0, 0), self._image.get_rect(), 5)
+        if self._visible:
+            self._image.set_alpha(128)
+        else:
+            self._image.set_alpha(0)
+        return
+
+    @property
+    def visible(self) -> bool:
+        return self._visible
+
+    @visible.setter
+    def visible(self, visible: bool) -> None:
+        self._visible = visible
+        if self._visible:
+            self._image.set_alpha(128)
+        else:
+            self._image.set_alpha(0)
+        return
+
+    def move_hover(self) -> bool:
+        return self._rect.collidepoint(mouse.get_pos())
 
 
 class ButtonObject(Object):
