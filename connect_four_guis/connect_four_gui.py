@@ -16,7 +16,11 @@ class ConnectFourGui:
     PLAYER_PIECE_INDICATOR_SCALING = 0.4
 
     def __init__(
-        self, player1_name: str, player2_name: str, scaling_factor: float = 1.0
+        self,
+        player1_name: str,
+        player2_name: str,
+        mode: str = "pvp",
+        scaling_factor: float = 1.0,
     ) -> None:
         self.display: Surface = display.set_mode(
             (
@@ -170,7 +174,9 @@ class ConnectFourGui:
             return Codes.QUIT
         elif event.type == pygame.MOUSEBUTTONDOWN:
             self._drop_piece()
-            self._check_winner()
+            if self._check_winner():
+                self._wait_for_click()
+                return Codes.WINNER
         return Codes.RUNNING
 
     def _mouse_hover_column_bounding_box_check(self) -> None:
@@ -221,15 +227,15 @@ class ConnectFourGui:
             )
             self.screen.groups["played_pieces"].add(new_piece)
 
-    def _check_winner(self) -> None:
+    def _check_winner(self) -> bool:
         if self.connect_four.winner is None:
-            return
+            return False
         self.screen.groups["chooser_pieces"].get_sprite(0).visible = False
         self.screen.groups["chooser_pieces"].get_sprite(1).visible = False
         winner_text = TextObject(
-            name="player1NameTxt",
+            name="winnerTxt",
             text="{0} Wins".format(self.connect_four.winner),
-            text_font=SysFont(DEFAULT_FONT_TYPE, 128),
+            text_font=SysFont(DEFAULT_FONT_TYPE, 72),
             scaling_factor=self.scaling_factor,
         )
         winner_text.position = (
@@ -237,6 +243,32 @@ class ConnectFourGui:
             round(self.screen.height * 0.1),
         )
         self.screen.groups["static_objects"].add(winner_text)
+        return True
+
+    def _wait_for_click(self) -> None:
+        click_to_continue = TextObject(
+            name="continueTxt",
+            text="Click To Continue",
+            text_font=SysFont(DEFAULT_FONT_TYPE, 128),
+            scaling_factor=self.scaling_factor,
+        )
+        click_to_continue.position = (
+            round(self.screen.width / 2 - click_to_continue.width / 2),
+            round(self.screen.height / 2 - click_to_continue.height / 2),
+        )
+        self.screen.groups["static_objects"].add(click_to_continue)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    return
+            self.screen.update()
+            self.display.blit(
+                self.screen.screen,
+                (self.screen.x, self.screen.y),
+            )
+            display.update()
+            self.clock.tick(DEFAULT_FRAMERATE)
 
     def start(self) -> Codes:
         code = Codes.RUNNING
