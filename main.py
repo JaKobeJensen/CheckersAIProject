@@ -1,10 +1,8 @@
-import pygame
-
 from codes import Codes
 from connect_four_guis import ConnectFourGui, MainMenuGui
 
 
-def connect_four(mode="pvp", player1_name="Player 1", player2_name="Player 2") -> int:
+def connect_four_game(mode="pvp", player1_name="Player 1", player2_name="Player 2") -> int:
     connect_four = ConnectFourGui(
         player1_name=player1_name, player2_name=player2_name, mode=mode
     )
@@ -22,7 +20,7 @@ def main() -> None:
         if code == Codes.MAIN_MENU:
             code = main_menu()
         elif code == Codes.PLAYER_VS_PLAYER:
-            code = connect_four(
+            code = connect_four_game(
                 mode="pvp", player1_name="Player 1", player2_name="Player 2"
             )
         elif code == Codes.PLAYER_VS_COMPUTER:
