@@ -28,7 +28,8 @@ class MainMenuGui:
         )
         self.scaling_factor = scaling_factor
         self.clock = Clock()
-        self.screen.add_new_group("static_objects")
+        self.screen.add_new_group("text")
+        self.screen.add_new_group("buttons")
 
         """TITLE TEXT"""
         title_text = TextObject(
@@ -44,7 +45,7 @@ class MainMenuGui:
             round(self.screen.width / 2 - title_text.width / 2),
             round(self.screen.height * 0.05),
         )
-        self.screen.groups["static_objects"].add(title_text)
+        self.screen.add_new_sprite(title_text, title_text.name, "text", True)
 
         """PLAYER VS PLAYER BUTTON"""
         player_vs_player_button = ButtonObject(
@@ -62,7 +63,7 @@ class MainMenuGui:
             round(self.screen.width / 2 - player_vs_player_button.width / 2),
             round(self.screen.height * 0.25),
         )
-        self.screen.groups["static_objects"].add(player_vs_player_button)
+        self.screen.add_new_sprite(player_vs_player_button, player_vs_player_button.name, "buttons", True)
 
         """PLAYER VS COMPUTER BUTTON"""
         player_vs_computer_button = ButtonObject(
@@ -80,7 +81,7 @@ class MainMenuGui:
             round(self.screen.width / 2 - player_vs_player_button.width / 2),
             round(self.screen.height * 0.40),
         )
-        self.screen.groups["static_objects"].add(player_vs_computer_button)
+        self.screen.add_new_sprite(player_vs_computer_button, player_vs_computer_button.name, "buttons", True)
 
         """COMPUTER VS COMPUTER BUTTON"""
         computer_vs_computer_button = ButtonObject(
@@ -98,7 +99,7 @@ class MainMenuGui:
             round(self.screen.width / 2 - player_vs_player_button.width / 2),
             round(self.screen.height * 0.55),
         )
-        self.screen.groups["static_objects"].add(computer_vs_computer_button)
+        self.screen.add_new_sprite(computer_vs_computer_button, computer_vs_computer_button.name, "buttons", True)
 
         """TRAIN COMPUTER BUTTON"""
         train_computer_button = ButtonObject(
@@ -116,7 +117,7 @@ class MainMenuGui:
             round(self.screen.width / 2 - player_vs_player_button.width / 2),
             round(self.screen.height * 0.70),
         )
-        self.screen.groups["static_objects"].add(train_computer_button)
+        self.screen.add_new_sprite(train_computer_button, train_computer_button.name, "buttons", True)
 
         return
 
@@ -124,16 +125,15 @@ class MainMenuGui:
         if event.type == pygame.QUIT:
             return Codes.QUIT
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            for game_object in self.screen.groups["static_objects"]:
-                if type(game_object) is not ButtonObject:
-                    continue
-                if game_object.move_hover() and game_object.name == "pvpBtn":
+            for button in self.screen.get_sprites_from_group("buttons"):
+                if type(button) is not ButtonObject: continue
+                if button.move_hover() and button.name == "pvpBtn":
                     return Codes.PLAYER_VS_PLAYER
-                if game_object.move_hover() and game_object.name == "pvcBtn":
+                if button.move_hover() and button.name == "pvcBtn":
                     return Codes.PLAYER_VS_COMPUTER
-                if game_object.move_hover() and game_object.name == "cvcBtn":
+                if button.move_hover() and button.name == "cvcBtn":
                     return Codes.COMPUTER_VS_COMPUTER
-                if game_object.move_hover() and game_object.name == "trainBtn":
+                if button.move_hover() and button.name == "trainBtn":
                     return Codes.TRAIN_COMPUTER
         return Codes.RUNNING
 

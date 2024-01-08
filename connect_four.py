@@ -36,6 +36,10 @@ class ConnectFour:
             return self.player1_name
         else:
             return self.player2_name
+        
+    @property
+    def last_piece_played_position(self) -> tuple[int, int]:
+        return self._last_piece_played_position
 
     def _check_win(self) -> None:
         for rowIdx, row in enumerate(self._game_board):
@@ -59,8 +63,7 @@ class ConnectFour:
         if layer == 4:
             return True
         if (
-            direction == "all"
-            and previous_space == self.EMPTY_SPACE
+            previous_space == self.EMPTY_SPACE
             or idx[0] < 0
             or idx[0] >= self.GAMEBOARD_HEIGHT
             or idx[1] < 0
@@ -101,13 +104,9 @@ class ConnectFour:
         self._winner = None
         return
 
-    def last_piece_played_position(self) -> tuple[int, int]:
-        return self._last_piece_played_position
-
     def player_move(self, column: int) -> bool:
         if self._winner is not None:
             return False
-        column -= 1
         for row in reversed(range(len(self._game_board))):
             if self._game_board[row][column] != self.EMPTY_SPACE:
                 continue

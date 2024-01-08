@@ -1,5 +1,5 @@
 import pygame
-from pygame import Surface, display, transform
+from pygame import Surface, display
 from pygame.event import Event
 from pygame.font import SysFont
 from pygame.time import Clock
@@ -7,6 +7,7 @@ from pygame.time import Clock
 from codes import Codes
 from connect_four import ConnectFour
 from connect_four_guis.const import *
+from gui_components import BoundingBoxObject
 from connect_four_objects import GameBoard, RedPiece, YellowPiece
 from gui_components import BoundingBoxObject, Screen, TextObject
 
@@ -56,7 +57,7 @@ class ConnectFourGui:
             round(self.screen.width * 0.02),
             round(self.screen.height * 0.02),
         )
-        self.screen.groups["static_objects"].add(player1_name_text)
+        self.screen.add_new_sprite(player1_name_text, player1_name_text.name, "static_objects")
 
         """PLAYER2 NAME TEXT"""
         player2_name_text = TextObject(
@@ -72,7 +73,7 @@ class ConnectFourGui:
             ),
             round(self.screen.width * 0.02),
         )
-        self.screen.groups["static_objects"].add(player2_name_text)
+        self.screen.add_new_sprite(player2_name_text, player2_name_text.name, "static_objects")
 
         """PLAYER 1 PIECE INDICATOR"""
         player1_piece_indicator = RedPiece(
@@ -86,7 +87,7 @@ class ConnectFourGui:
                 - (player1_piece_indicator.height - player1_name_text.height)
             ),
         )
-        self.screen.groups["static_objects"].add(player1_piece_indicator)
+        self.screen.add_new_sprite(player1_piece_indicator, player1_piece_indicator.name, "static_objects")
 
         """PLAYER 2 PIECE INDICATOR"""
         player2_piece_indicator = YellowPiece(
@@ -104,7 +105,7 @@ class ConnectFourGui:
                 - (player2_piece_indicator.height - player2_name_text.height)
             ),
         )
-        self.screen.groups["static_objects"].add(player2_piece_indicator)
+        self.screen.add_new_sprite(player2_piece_indicator, player2_piece_indicator.name, "static_objects")
 
         """CONNECT FOUR BOARD"""
         connect_four_board = GameBoard(name="gameboard", scaling_factor=scaling_factor)
@@ -115,7 +116,7 @@ class ConnectFourGui:
                 - (self.screen.height * 0.05)
             ),
         )
-        self.screen.groups["static_objects"].add(connect_four_board)
+        self.screen.add_new_sprite(connect_four_board, connect_four_board.name, "static_objects", top=True)
 
         """RED PIECE CHOOSER"""
         red_piece_chooser = RedPiece(
@@ -127,11 +128,11 @@ class ConnectFourGui:
             - red_piece_chooser.height
             - round(red_piece_chooser.height * 0.3),
         )
-        self.screen.groups["chooser_pieces"].add(red_piece_chooser)
+        self.screen.add_new_sprite(red_piece_chooser, red_piece_chooser.name, "chooser_pieces")
 
         """YELLOW PIECE CHOOSER"""
         yellow_piece_chooser = YellowPiece(
-            name="redPieceChooser", scaling_factor=scaling_factor, visible=False
+            name="yellowPieceChooser", scaling_factor=scaling_factor, visible=False
         )
         yellow_piece_chooser.position = (
             connect_four_board.x,
@@ -139,33 +140,22 @@ class ConnectFourGui:
             - yellow_piece_chooser.height
             - round(yellow_piece_chooser.height * 0.3),
         )
-        self.screen.groups["chooser_pieces"].add(yellow_piece_chooser)
+        self.screen.add_new_sprite(yellow_piece_chooser, yellow_piece_chooser.name, "chooser_pieces")
 
         """BOUNDING BOX OBJECTS"""
         for i in range(7):
             column_bounding_box = BoundingBoxObject(
                 name="column{0}Bbx".format(i),
-                width=round(connect_four_board.width / 7),
+                width=84,
                 height=self.screen.height,
                 scaling_factor=scaling_factor,
                 visible=False,
             )
             column_bounding_box.position = (
-                round((column_bounding_box.width * i) + connect_four_board.x),
+                round((column_bounding_box.width * i) + (connect_four_board.x + 7)),
                 0,
             )
-            self.screen.groups["column_bounding_boxes"].add(column_bounding_box)
-        bottom_bounding_box = BoundingBoxObject(
-            name="bottomBbx",
-            width=self.screen.width,
-            height=10,
-            scaling_factor=scaling_factor,
-            visible=False,
-        )
-        bottom_bounding_box.position = (
-            0,
-            connect_four_board.rect.bottom,
-        )
+            self.screen.add_new_sprite(column_bounding_box, column_bounding_box.name, "column_bounding_boxes")
 
         return
 
@@ -180,58 +170,53 @@ class ConnectFourGui:
         return Codes.RUNNING
 
     def _mouse_hover_column_bounding_box_check(self) -> None:
-        for column_index, column in enumerate(
-            self.screen.groups["column_bounding_boxes"]
-        ):
+        for column_index, column in enumerate(self.screen.get_sprites_from_group("column_bounding_boxes")):
+            if type(column) is not BoundingBoxObject: continue
             if column.move_hover():
-                for chooser in self.screen.groups["chooser_pieces"]:
+                for chooser in self.screen.get_sprites_from_group("chooser_pieces"):
                     chooser.x = round(column.x + (column.width / 2 - chooser.width / 2))
                     self._current_column = column_index
         return
 
     def _drop_piece(self) -> None:
-        if self.connect_four.winner is None:
-            self.connect_four.player_move(self._current_column)
-            if self.connect_four.whos_turn == self.player2_name:
-                new_piece = RedPiece(
-                    name="redPiece{0}".format(
-                        int(self.connect_four.number_of_moves - 1 / 2)
-                    ),
-                    scaling_factor=self.scaling_factor,
-                    visible=True,
-                )
-                self.screen.groups["chooser_pieces"].get_sprite(0).visible = False
-                self.screen.groups["chooser_pieces"].get_sprite(1).visible = True
-            else:
-                new_piece = YellowPiece(
-                    name="yellowPiece{0}".format(
-                        round(self.connect_four.number_of_moves - 1 / 2)
-                    ),
-                    scaling_factor=self.scaling_factor,
-                    visible=True,
-                )
-                self.screen.groups["chooser_pieces"].get_sprite(0).visible = True
-                self.screen.groups["chooser_pieces"].get_sprite(1).visible = False
-            new_piece.position = (
-                self.screen.groups["chooser_pieces"].get_top_sprite().x,
-                self.screen.groups["static_objects"]
-                .get_sprite(len(self.screen.groups["static_objects"]) - 1)
-                .y
-                + round(
-                    self.screen.groups["static_objects"]
-                    .get_sprite(len(self.screen.groups["static_objects"]) - 1)
-                    .height
-                    / 6
-                )
-                * self.connect_four.last_piece_played_position()[0],
+        if self.connect_four.winner is not None:
+            return
+        self.connect_four.player_move(self._current_column)
+        
+        """NEW PIECE"""
+        if self.connect_four.whos_turn == self.player2_name:
+            new_piece = RedPiece(
+                name="redPiece{0}".format(
+                    int(self.connect_four.number_of_moves - 1 / 2)
+                ),
+                scaling_factor=self.scaling_factor,
+                visible=True,
             )
-            self.screen.groups["played_pieces"].add(new_piece)
+            self.screen.get_sprite("redPieceChooser").visible = False
+            self.screen.get_sprite("yellowPieceChooser").visible = True
+        else:
+            new_piece = YellowPiece(
+                name="yellowPiece{0}".format(
+                    round(self.connect_four.number_of_moves - 1 / 2)
+                ),
+                scaling_factor=self.scaling_factor,
+                visible=True,
+            )
+            self.screen.get_sprite("redPieceChooser").visible = True
+            self.screen.get_sprite("yellowPieceChooser").visible = False 
+        new_piece.position = (
+            self.screen.get_sprite("redPieceChooser").x, 
+            (self.screen.get_sprite("gameboard").y + 15) + (self.screen.get_sprite("column0Bbx").width * self.connect_four.last_piece_played_position[0]),
+        )
+        self.screen.add_new_sprite(new_piece, new_piece.name, "played_pieces", top=False)
+        
+        return
 
     def _check_winner(self) -> bool:
         if self.connect_four.winner is None:
             return False
-        self.screen.groups["chooser_pieces"].get_sprite(0).visible = False
-        self.screen.groups["chooser_pieces"].get_sprite(1).visible = False
+        self.screen.get_sprite("redPieceChooser").visible = False
+        self.screen.get_sprite("yellowPieceChooser").visible = False
         winner_text = TextObject(
             name="winnerTxt",
             text="{0} Wins".format(self.connect_four.winner),
@@ -242,24 +227,27 @@ class ConnectFourGui:
             round(self.screen.width / 2 - winner_text.width / 2),
             round(self.screen.height * 0.1),
         )
-        self.screen.groups["static_objects"].add(winner_text)
+        self.screen.add_new_sprite(winner_text, winner_text.name, "static_objects")
         return True
 
     def _wait_for_click(self) -> None:
         click_to_continue = TextObject(
             name="continueTxt",
             text="Click To Continue",
-            text_font=SysFont(DEFAULT_FONT_TYPE, 128),
+            text_font=SysFont(DEFAULT_FONT_TYPE, 84),
             scaling_factor=self.scaling_factor,
         )
         click_to_continue.position = (
             round(self.screen.width / 2 - click_to_continue.width / 2),
             round(self.screen.height / 2 - click_to_continue.height / 2),
         )
-        self.screen.groups["static_objects"].add(click_to_continue)
+        self.screen.add_new_sprite(click_to_continue, click_to_continue.name, "static_objects")
 
         while True:
             for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     return
             self.screen.update()

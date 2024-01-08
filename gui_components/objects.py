@@ -202,10 +202,9 @@ class BoundingBoxObject(Object):
             scaling_factor,
             visible=visible,
         )
-        image.set_alpha(0)
+        self._image.set_alpha(0)
         if visible:
-            image.set_alpha(128)
-        self._visible = visible
+            self._image.set_alpha(128)
 
     @property
     def image(self) -> Surface:
