@@ -98,17 +98,17 @@ class Screen:
     def get_sprite(self, sprite_name: str) -> Object:
         sprite = self._groups["all"][sprite_name]
         if sprite[1]:
-            return self._sprite_group.get_sprite(sprite[0])
+            return self._sprite_group.get_sprite(sprite[0] + self._bottom_layer_count)
         else:
-            return self._sprite_group.get_sprite(sprite[0] + self._top_layer_count)
+            return self._sprite_group.get_sprite(sprite[0])
     
     def get_sprites_from_group(self, group_name: str) -> list[Object]:
         sprites = []
         for sprite_name, sprite in self._groups[group_name].items():
             if sprite[1]:
-                sprites.append(self._sprite_group.get_sprite(sprite[0]))
+                sprites.append(self._sprite_group.get_sprite(sprite[0] + self._bottom_layer_count))
             else:
-                sprites.append(self._sprite_group.get_sprite(sprite[0] + self._top_layer_count))
+                sprites.append(self._sprite_group.get_sprite(sprite[0]))
         return sprites
 
     def update(self) -> None:

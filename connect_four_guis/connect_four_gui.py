@@ -146,13 +146,13 @@ class ConnectFourGui:
         for i in range(7):
             column_bounding_box = BoundingBoxObject(
                 name="column{0}Bbx".format(i),
-                width=round(connect_four_board.width / 7),
+                width=84,
                 height=self.screen.height,
                 scaling_factor=scaling_factor,
                 visible=False,
             )
             column_bounding_box.position = (
-                round((column_bounding_box.width * i) + connect_four_board.x),
+                round((column_bounding_box.width * i) + (connect_four_board.x + 7)),
                 0,
             )
             self.screen.add_new_sprite(column_bounding_box, column_bounding_box.name, "column_bounding_boxes")
@@ -179,33 +179,38 @@ class ConnectFourGui:
         return
 
     def _drop_piece(self) -> None:
-        if self.connect_four.winner is None:
-            self.connect_four.player_move(self._current_column)
-            if self.connect_four.whos_turn == self.player2_name:
-                new_piece = RedPiece(
-                    name="redPiece{0}".format(
-                        int(self.connect_four.number_of_moves - 1 / 2)
-                    ),
-                    scaling_factor=self.scaling_factor,
-                    visible=True,
-                )
-                self.screen.get_sprite("redPieceChooser").visible = False
-                self.screen.get_sprite("yellowPieceChooser").visible = True
-            else:
-                new_piece = YellowPiece(
-                    name="yellowPiece{0}".format(
-                        round(self.connect_four.number_of_moves - 1 / 2)
-                    ),
-                    scaling_factor=self.scaling_factor,
-                    visible=True,
-                )
-                self.screen.get_sprite("redPieceChooser").visible = True
-                self.screen.get_sprite("yellowPieceChooser").visible = False
-            new_piece.position = (
-                self.screen.get_sprite("redPieceChooser").x, 
-                self.screen.get_sprite("gameboard").y + round(self.screen.get_sprite("gameboard").height / 6) * self.connect_four.last_piece_played_position[0],
+        if self.connect_four.winner is not None:
+            return
+        self.connect_four.player_move(self._current_column)
+        
+        """NEW PIECE"""
+        if self.connect_four.whos_turn == self.player2_name:
+            new_piece = RedPiece(
+                name="redPiece{0}".format(
+                    int(self.connect_four.number_of_moves - 1 / 2)
+                ),
+                scaling_factor=self.scaling_factor,
+                visible=True,
             )
-            self.screen.add_new_sprite(new_piece, new_piece.name, "played_pieces", top=True)
+            self.screen.get_sprite("redPieceChooser").visible = False
+            self.screen.get_sprite("yellowPieceChooser").visible = True
+        else:
+            new_piece = YellowPiece(
+                name="yellowPiece{0}".format(
+                    round(self.connect_four.number_of_moves - 1 / 2)
+                ),
+                scaling_factor=self.scaling_factor,
+                visible=True,
+            )
+            self.screen.get_sprite("redPieceChooser").visible = True
+            self.screen.get_sprite("yellowPieceChooser").visible = False 
+        new_piece.position = (
+            self.screen.get_sprite("redPieceChooser").x, 
+            (self.screen.get_sprite("gameboard").y + 15) + (self.screen.get_sprite("column0Bbx").width * self.connect_four.last_piece_played_position[0]),
+        )
+        self.screen.add_new_sprite(new_piece, new_piece.name, "played_pieces", top=False)
+        
+        return
 
     def _check_winner(self) -> bool:
         if self.connect_four.winner is None:
