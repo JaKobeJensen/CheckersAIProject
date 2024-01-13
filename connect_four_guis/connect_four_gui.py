@@ -1,3 +1,7 @@
+from time import sleep
+import random
+import copy
+
 import pygame
 from pygame import Surface, display
 from pygame.event import Event
@@ -7,20 +11,21 @@ from pygame.time import Clock
 from codes import Codes
 from connect_four import ConnectFour
 from connect_four_guis.const import *
-from gui_components import BoundingBoxObject
 from connect_four_objects import GameBoard, RedPiece, YellowPiece
 from gui_components import BoundingBoxObject, Screen, TextObject
+from minmax_connect_four_ai import MinimaxConnectFourAI
 
 
 class ConnectFourGui:
     PLAYER_NAMES_SIZE = 32
     PLAYER_PIECE_INDICATOR_SCALING = 0.4
-
+    
     def __init__(
         self,
         player1_name: str,
         player2_name: str,
         mode: str = "pvp",
+        computer_difficulty: str = None,
         scaling_factor: float = 1.0,
     ) -> None:
         self.display: Surface = display.set_mode(
@@ -34,9 +39,26 @@ class ConnectFourGui:
             height=DEFAULT_DISPLAY_SIZE[1],
             screen_scaling_factor=scaling_factor,
         )
-        self.connect_four = ConnectFour(player1_name, player2_name)
-        self.player1_name: str = player1_name
-        self.player2_name: str = player2_name
+        
+        if random.randint(0,1) == 0:
+            self.connect_four = ConnectFour(player1_name, player2_name)
+            self.player1_name: str = player1_name
+            self.player2_name: str = player2_name
+            if mode == "pvc":
+                self._computer = MinimaxConnectFourAI(player2_name, self.connect_four.PLAYER2_SPACE, computer_difficulty)
+            else:
+                self._computer = None
+        else:
+            self.connect_four = ConnectFour(player2_name, player1_name)
+            self.player1_name: str = player2_name
+            self.player2_name: str = player1_name
+            if mode == "pvc":
+                self._computer = MinimaxConnectFourAI(player2_name, self.connect_four.PLAYER1_SPACE, computer_difficulty)
+            else:
+                self._computer = None
+        
+        self._mode: str = mode
+        self._computer_difficulty: str = computer_difficulty
         self.scaling_factor: float = scaling_factor
         self.clock: Clock = Clock()
         self._current_column: int = 0
@@ -49,7 +71,7 @@ class ConnectFourGui:
         """PLAYER1 NAME TEXT"""
         player1_name_text = TextObject(
             name="player1NameTxt",
-            text=player1_name,
+            text=self.player1_name,
             text_font=SysFont(DEFAULT_FONT_TYPE, self.PLAYER_NAMES_SIZE),
             scaling_factor=scaling_factor,
         )
@@ -62,7 +84,7 @@ class ConnectFourGui:
         """PLAYER2 NAME TEXT"""
         player2_name_text = TextObject(
             name="player2NameTxt",
-            text=player2_name,
+            text=self.player2_name,
             text_font=SysFont(DEFAULT_FONT_TYPE, self.PLAYER_NAMES_SIZE),
             scaling_factor=scaling_factor,
         )
@@ -116,7 +138,7 @@ class ConnectFourGui:
                 - (self.screen.height * 0.05)
             ),
         )
-        self.screen.add_new_sprite(connect_four_board, connect_four_board.name, "static_objects", top=True)
+        self.screen.add_new_sprite(connect_four_board, connect_four_board.name, "static_objects", top_layer=True)
 
         """RED PIECE CHOOSER"""
         red_piece_chooser = RedPiece(
@@ -167,6 +189,8 @@ class ConnectFourGui:
             if self._check_winner():
                 self._wait_for_click()
                 return Codes.WINNER
+            if self._mode == "pvc":
+                return Codes.COMPUTER_TURN
         return Codes.RUNNING
 
     def _mouse_hover_column_bounding_box_check(self) -> None:
@@ -208,28 +232,43 @@ class ConnectFourGui:
             self.screen.get_sprite("redPieceChooser").x, 
             (self.screen.get_sprite("gameboard").y + 15) + (self.screen.get_sprite("column0Bbx").width * self.connect_four.last_piece_played_position[0]),
         )
-        self.screen.add_new_sprite(new_piece, new_piece.name, "played_pieces", top=False)
+        self.screen.add_new_sprite(new_piece, new_piece.name, "played_pieces", top_layer=False)
         
         return
 
     def _check_winner(self) -> bool:
-        if self.connect_four.winner is None:
-            return False
-        self.screen.get_sprite("redPieceChooser").visible = False
-        self.screen.get_sprite("yellowPieceChooser").visible = False
-        winner_text = TextObject(
-            name="winnerTxt",
-            text="{0} Wins".format(self.connect_four.winner),
-            text_font=SysFont(DEFAULT_FONT_TYPE, 72),
-            scaling_factor=self.scaling_factor,
-        )
-        winner_text.position = (
-            round(self.screen.width / 2 - winner_text.width / 2),
-            round(self.screen.height * 0.1),
-        )
-        self.screen.add_new_sprite(winner_text, winner_text.name, "static_objects")
-        return True
-
+        if len(self.connect_four.legal_moves()) == 0:
+            self.screen.get_sprite("redPieceChooser").visible = False
+            self.screen.get_sprite("yellowPieceChooser").visible = False
+            tie_text = TextObject(
+                name="tieTxt",
+                text="Tie",
+                text_font=SysFont(DEFAULT_FONT_TYPE, 72),
+                scaling_factor=self.scaling_factor,
+            )
+            tie_text.position = (
+                round(self.screen.width / 2 - tie_text.width / 2),
+                round(self.screen.height * 0.1),
+            )
+            self.screen.add_new_sprite(tie_text, tie_text.name, "static_objects")
+            return True
+        elif self.connect_four.winner is not None:
+            self.screen.get_sprite("redPieceChooser").visible = False
+            self.screen.get_sprite("yellowPieceChooser").visible = False
+            winner_text = TextObject(
+                name="winnerTxt",
+                text="{0} Wins".format(self.connect_four.winner),
+                text_font=SysFont(DEFAULT_FONT_TYPE, 72),
+                scaling_factor=self.scaling_factor,
+            )
+            winner_text.position = (
+                round(self.screen.width / 2 - winner_text.width / 2),
+                round(self.screen.height * 0.1),
+            )
+            self.screen.add_new_sprite(winner_text, winner_text.name, "static_objects")
+            return True
+        return False
+    
     def _wait_for_click(self) -> None:
         click_to_continue = TextObject(
             name="continueTxt",
@@ -258,19 +297,44 @@ class ConnectFourGui:
             display.update()
             self.clock.tick(DEFAULT_FRAMERATE)
 
+    def _computer_play(self) -> Codes:
+        self.update_display()
+        computer_move = self._computer.move(copy.deepcopy(self.connect_four))
+        if self._computer_difficulty != "master":
+            sleep(1)
+        pygame.mouse.set_pos(self.screen.get_sprite("column{0}Bbx".format(computer_move)).rect.center)
+        self._mouse_hover_column_bounding_box_check()
+        self.update_display()
+        sleep(0.5)
+        self._drop_piece()
+        if self._check_winner():
+            self._wait_for_click()
+            return Codes.WINNER
+        return Codes.RUNNING
+    
+    def update_display(self) -> None:
+        self.screen.update()
+        self.display.blit(
+            self.screen.screen,
+            (self.screen.x, self.screen.y),
+        )
+        display.update()
+        self.clock.tick(DEFAULT_FRAMERATE)
+        return
+    
     def start(self) -> Codes:
+        if self._computer is not None and self.connect_four.player1_name == self._computer.name:
+            self._computer_play()
+        
         code = Codes.RUNNING
         while code is Codes.RUNNING:
             for event in pygame.event.get():
                 code = self._event_check(event)
+                if code == Codes.COMPUTER_TURN:
+                    code = self._computer_play()
 
             self._mouse_hover_column_bounding_box_check()
 
-            self.screen.update()
-            self.display.blit(
-                self.screen.screen,
-                (self.screen.x, self.screen.y),
-            )
-            display.update()
-            self.clock.tick(DEFAULT_FRAMERATE)
+            self.update_display()
+                
         return code

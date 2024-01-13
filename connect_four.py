@@ -17,7 +17,7 @@ class ConnectFour:
         self._number_of_moves: int = 0
         self._last_piece_played_position: tuple[int, int] = ()
         return
-
+    
     @property
     def game_board(self) -> list[list[int]]:
         return self._game_board.copy()
@@ -94,6 +94,13 @@ class ConnectFour:
         ):
             return True
         return False
+
+    def legal_moves(self) -> list[int]:
+        legal_moves = []
+        for column, space in enumerate(self._game_board[0]):
+            if space != self.EMPTY_SPACE: continue
+            legal_moves.append(column)
+        return legal_moves
 
     def reset_board(self) -> None:
         self._game_board = [
