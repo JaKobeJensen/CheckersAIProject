@@ -76,21 +76,21 @@ class Screen:
         self._groups[group_name] = {}
         return
     
-    def add_new_sprite(self, sprite: Object, sprite_name: str, group_name: str=None, top: bool=True) -> None:
+    def add_new_sprite(self, sprite: Object, sprite_name: str, group_name: str=None, top_layer: bool=True) -> None:
         if group_name is not None and group_name in self._groups and group_name != "all":
-            if top:
-                self._groups[group_name][sprite_name] = (self._top_layer_count, top)
+            if top_layer:
+                self._groups[group_name][sprite_name] = (self._top_layer_count, top_layer)
             else:
-                self._groups[group_name][sprite_name] = (self._bottom_layer_count, top)
+                self._groups[group_name][sprite_name] = (self._bottom_layer_count, top_layer)
         else:
             return
         self._sprite_group.add(sprite)
-        if top:
-            self._groups["all"][sprite_name] = (self._top_layer_count, top)
+        if top_layer:
+            self._groups["all"][sprite_name] = (self._top_layer_count, top_layer)
             self._top_layer_count+=1
             self._sprite_group.move_to_front(sprite)
         else:
-            self._groups["all"][sprite_name] = (self._bottom_layer_count, top)
+            self._groups["all"][sprite_name] = (self._bottom_layer_count, top_layer)
             self._bottom_layer_count+=1
             self._sprite_group.move_to_back(sprite)
         return

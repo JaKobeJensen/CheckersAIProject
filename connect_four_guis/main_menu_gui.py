@@ -119,6 +119,24 @@ class MainMenuGui:
         )
         self.screen.add_new_sprite(train_computer_button, train_computer_button.name, "buttons", True)
 
+        """QUIT BUTTON"""
+        quit_button = ButtonObject(
+            name="quitBtn",
+            width=self.BUTTON_SIZE[0],
+            height=self.BUTTON_SIZE[1],
+            text="Quit",
+            text_font=SysFont(
+                DEFAULT_FONT_TYPE,
+                self.BUTTON_TEXT_SIZE,
+            ),
+            scaling_factor=scaling_factor,
+        )
+        quit_button.position = (
+            round(self.screen.width / 2 - player_vs_player_button.width / 2),
+            round(self.screen.height * 0.85),
+        )
+        self.screen.add_new_sprite(quit_button, quit_button.name, "buttons", True)
+        
         return
 
     def _event_check(self, event: Event) -> Codes:
@@ -135,6 +153,8 @@ class MainMenuGui:
                     return Codes.COMPUTER_VS_COMPUTER
                 if button.move_hover() and button.name == "trainBtn":
                     return Codes.TRAIN_COMPUTER
+                if button.move_hover() and button.name == "quitBtn":
+                    return Codes.QUIT
         return Codes.RUNNING
 
     def start(self) -> Codes:
